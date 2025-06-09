@@ -31,6 +31,8 @@ from repo_utils import getLatestVersion
 
 # Thread synchronization primitives for shared structures
 LOCK = threading.Lock()
+# Lock to ensure only one file update runs at a time
+FILE_UPDATE_LOCK = threading.Lock()
 
 from threading import Timer
 import asyncio
@@ -177,7 +179,7 @@ def debounce_trigger(file_path: Path):
     with LOCK:
         # Remove the timer entry now that it fired
         DEBOUNCE_TIMERS.pop(file_path, None)
-        
+
         if file_path in FETCHED_LOCKS:
             print(f"[Skip] Locked file after debounce: {file_path}")
             return
@@ -198,18 +200,19 @@ def process_file_change(file_path: Path):
 
     try:
         print(f"[Update Detected] {file_path} -> {name}")
-        latest_name = getLatestVersion(name)
-        if latest_name: delete_from_repo(latest_name) 
-        else: print("No version found") 
-        erase_cs(name)
+        with FILE_UPDATE_LOCK:
+            latest_name = getLatestVersion(name)
+            if latest_name: delete_from_repo(latest_name) 
+            else: print("No version found") 
+            erase_cs(name)
 
-        ts = int(time.time())
-        insert_to_repo(file_path, name, ts)
-        
-        wait_until_repo_ready(name, ts)
-        
-        versioned_name = name + f"/t={ts}"
-        notify_update(versioned_name)
+            ts = int(time.time())
+            insert_to_repo(file_path, name, ts)
+            
+            wait_until_repo_ready(name, ts)
+            
+            versioned_name = name + f"/t={ts}"
+            notify_update(versioned_name)
 
     except Exception as e:
         print(f"[Error] Failed to update {name}: {e}")
