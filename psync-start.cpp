@@ -21,6 +21,7 @@
 #include <array>
 
 #include <filesystem>
+#include <thread>
 
 std::string GETFILE = "./getfile.py";
 std::string GETLATEST = "./get-latest.py";
@@ -117,19 +118,23 @@ private:
           }
         }
 
-        // Step 1: Erase from Content Store
-        std::string cmd = "nfdc cs erase " + name.toUri();
-        int result = std::system(cmd.c_str());
-        if (result != 0)
-          NDN_LOG_WARN("CS erase failed for " << name);
-
-        // Step 2: Schedule fetch after grace period (e.g., 500 ms)
-        // Step 3: Put fetched file into local repo
-        m_scheduler.schedule(ndn::time::milliseconds(500), [this, name] {
-          if (fetchFile(name)) {
-            auto [prefix, filepath, timestamp] = splitNameComponents(name);
-            putFile(filepath, prefix, timestamp);
+          // Step 1: erase from CS asynchronously
+        std::thread([name] {
+          std::string cmd = "nfdc cs erase " + name.toUri();
+          int result = std::system(cmd.c_str());
+          if (result != 0) {
+            NDN_LOG_WARN("CS erase failed for " << name);
           }
+        }).detach();
+
+        // Step 2: schedule fetch and repo insert without blocking main loop
+        m_scheduler.schedule(ndn::time::milliseconds(500), [this, name] {
+          std::thread([this, name] {
+            if (fetchFile(name)) {
+              auto [prefix, filepath, timestamp] = splitNameComponents(name);
+              putFile(filepath, prefix, timestamp);
+            }
+          }).detach();
         });
       }
     }

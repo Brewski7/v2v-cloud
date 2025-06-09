@@ -29,6 +29,9 @@ import atexit
 
 from repo_utils import getLatestVersion
 
+# Thread synchronization primitives for shared structures
+LOCK = threading.Lock()
+
 from threading import Timer
 import asyncio
 
@@ -121,12 +124,14 @@ def start_fetch_listener():
                 msg = data.decode()
                 if msg.startswith("LOCK:"):
                     path = Path(msg[5:]).resolve()
-                    FETCHED_LOCKS.add(path)
+                    with LOCK:
+                        FETCHED_LOCKS.add(path)
                     print(f"[Socket] LOCKED: {path}")
                 elif msg.startswith("UNLOCK:"):
                     path = Path(msg[7:]).resolve()
-                    FETCHED_LOCKS.discard(path)
-                    FETCHED_FROM_PSYC.add(path)
+                    with LOCK:
+                        FETCHED_LOCKS.discard(path)
+                        FETCHED_FROM_PSYC.add(path)
                     print(f"[Socket] UNLOCKED: {path}")
             except Exception as e:
                 print(f"[Socket Error] {e}")
@@ -157,24 +162,30 @@ class ChangeHandler(FileSystemEventHandler):
             #    print(f"[Skip] File is locked from PSync for writing: {file_path}")
             #    return
 
-            if file_path in DEBOUNCE_TIMERS:
-                DEBOUNCE_TIMERS[file_path].cancel()
-            
+            with LOCK:
+                if file_path in DEBOUNCE_TIMERS:
+                    DEBOUNCE_TIMERS[file_path].cancel()
+                
             # Start a new debounce timer
             timer = Timer(DEBOUNCE_DELAY, debounce_trigger, args=[file_path])
-            DEBOUNCE_TIMERS[file_path] = timer
+            with LOCK:
+                DEBOUNCE_TIMERS[file_path] = timer
             timer.start()
 
 
 def debounce_trigger(file_path: Path):
-    if file_path in FETCHED_LOCKS:
-        print(f"[Skip] Locked file after debounce: {file_path}")
-        return
-    
-    if file_path in FETCHED_FROM_PSYC:
-        print(f"[Skip] File was fetched via PSync: {file_path}")
-        FETCHED_FROM_PSYC.discard(file_path) # this is needed as for some reason after unlock is given, there is one more file event triggered!!!
-        return
+    with LOCK:
+        # Remove the timer entry now that it fired
+        DEBOUNCE_TIMERS.pop(file_path, None)
+        
+        if file_path in FETCHED_LOCKS:
+            print(f"[Skip] Locked file after debounce: {file_path}")
+            return
+        
+        if file_path in FETCHED_FROM_PSYC:
+            print(f"[Skip] File was fetched via PSync: {file_path}")
+            FETCHED_FROM_PSYC.discard(file_path) # this is needed as for some reason after unlock is given, there is one more file event triggered!!!
+            return
 
     print(f"[Handle] File stabilized after debounce: {file_path}")
     process_file_change(file_path)
