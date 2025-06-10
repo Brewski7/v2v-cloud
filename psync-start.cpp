@@ -12,6 +12,9 @@
 #include <iostream>
 #include <ndn-cxx/util/segment-fetcher.hpp>
 #include <ndn-cxx/security/validator-null.hpp>
+#include <unistd.h>
+#include <PSync/detail/state.hpp>
+#include <map>
 
 // for execCmd()
 #include <cstdio>
@@ -19,6 +22,8 @@
 #include <stdexcept>
 #include <string>
 #include <array>
+#include <fstream>
+#include <vector>
 
 #include <filesystem>
 #include <thread>
@@ -26,6 +31,7 @@
 std::string GETFILE = "./getfile.py";
 std::string GETLATEST = "./get-latest.py";
 std::string PUTFILE = "./putfile.py";
+const std::string SUBSFILE = "./subsfile";
 
 NDN_LOG_INIT(PSync.Start);
 using namespace ndn::time_literals;
@@ -63,8 +69,36 @@ public:
     , m_userPrefix(userPrefix)
   {
     m_producer.addUserNode(m_userPrefix);
+    m_state[m_userPrefix] = 0;
 
-    NDN_LOG_INFO("Sync listener started with prefix: " << m_userPrefix);
+    char hostBuf[256];
+    if (gethostname(hostBuf, sizeof(hostBuf)) == 0) {
+      m_hostname = hostBuf;
+    }
+
+    std::ifstream in(SUBSFILE);
+    if (!in.is_open()) {
+      std::cout << "Unable to open subscriptions file: " << SUBSFILE << std::endl;
+    }
+    else {
+      std::string line;
+      while (std::getline(in, line)) {
+        line.erase(0, line.find_first_not_of(" \t\r\n"));
+        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+        if (line.empty())
+          continue;
+        //ndn::Name pref(m_hostname);
+        //pref.append(ndn::Name(line));
+        ndn::Name pref(line);
+        m_allowedPrefixes.push_back(pref);
+      }
+      std::cout << "Loaded " << m_allowedPrefixes.size() << " subscription prefixes from " << SUBSFILE << std::endl;
+      for (int i = 0; i < m_allowedPrefixes.size(); i++){
+        std::cout <<  m_allowedPrefixes[i] << std::endl;
+      }
+    }
+
+    std::cout << "Sync listener started with prefix: " << m_userPrefix << " on host " << m_hostname << std::endl;
   }
 
   void run()
@@ -76,6 +110,10 @@ private:
   void processSyncUpdate(const std::vector<psync::MissingDataInfo>& updates)
   {
     for (const auto& update : updates) {
+      m_state[update.prefix] = update.highSeq;
+    }
+
+    for (const auto& update : updates) {
       for (uint64_t i = update.lowSeq; i <= update.highSeq; ++i) {
         NDN_LOG_INFO("Received update: " << update.prefix << "/" << i);
         // Optional: React to update, fetch content, notify, etc.
@@ -83,8 +121,29 @@ private:
         ndn::Name name = update.prefix;
         //name.appendSegment(i-1);
 
-        NDN_LOG_INFO("Update received: " << name);
+        std::cout << "Update received: " << name << std::endl;
         
+        bool hostnameMatch = true;
+        if (!m_hostname.empty()) {
+          std::string firstComp = name.size() > 0 ? name.at(0).toUri() : "";
+          hostnameMatch = (firstComp == m_hostname);
+        }
+
+        bool subsMatch = false;
+        if (!m_allowedPrefixes.empty()) {
+          for (const auto& p : m_allowedPrefixes) {
+            if (p.isPrefixOf(name)) {
+              subsMatch = true;
+              break;
+            }
+          }
+        }
+
+        if (!hostnameMatch && !subsMatch) {
+          std::cout << "Ignoring update for " << name << " on host " << m_hostname << std::endl;
+          std::cout << "PSync update received but ignored due to hostname and subscription mismatch: " << name << std::endl;
+          continue;
+        }
 
         ndn::Name genericPrefix;
         for (const auto& comp : name) {
@@ -138,8 +197,15 @@ private:
         });
       }
     }
+    psync::detail::State curState;
+    for (const auto& [prefix, seq] : m_state) {
+      if (seq != 0) {
+        curState.addContent(ndn::Name(prefix).appendNumber(seq));
+      }
+    }
+    std::cout << "[SyncState] " << curState << std::endl;
   }
-
+  
   bool fetchFile(const ndn::Name& name)
   {
     std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri();
@@ -202,7 +268,9 @@ private:
   psync::FullProducer m_producer;
   ndn::Name m_userPrefix;
   //ndn::security::ValidatorNull m_validator;
-
+  std::string m_hostname;
+  std::vector<ndn::Name> m_allowedPrefixes;
+  std::map<ndn::Name, uint64_t> m_state;
 };
 
 std::string execCmd(const std::string& cmd) {
