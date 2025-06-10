@@ -24,6 +24,7 @@
 #include <array>
 #include <fstream>
 #include <vector>
+#include <cstdlib>
 
 #include <filesystem>
 #include <thread>
@@ -31,6 +32,7 @@
 std::string GETFILE = "./getfile.py";
 std::string GETLATEST = "./get-latest.py";
 std::string PUTFILE = "./putfile.py";
+std::string DELFILE = "./delfile.py";
 const std::string SUBSFILE = "./subsfile";
 
 NDN_LOG_INIT(PSync.Start);
@@ -107,6 +109,30 @@ public:
   }
 
 private:
+
+  static uint64_t extractTimestamp(const std::string& name)
+  {
+    auto pos = name.rfind("/t=");
+    if (pos == std::string::npos) {
+      return 0;
+    }
+    try {
+      return std::stoull(name.substr(pos + 3));
+    }
+    catch (...) {
+      return 0;
+    }
+  }
+
+  static void deleteFromRepo(const std::string& name)
+  {
+    std::string cmd = "python3 " + DELFILE + " -r bmw -n " + name;
+    int ret = std::system(cmd.c_str());
+    if (ret != 0) {
+      std::cerr << "[Delete Error] delfile.py failed for " << name << std::endl;
+    }
+  }
+
   void processSyncUpdate(const std::vector<psync::MissingDataInfo>& updates)
   {
     for (const auto& update : updates) {
@@ -154,38 +180,61 @@ private:
           }
         }
 
-        std::cout << "[INFO]: Name.toUri " << name.toUri() << std::endl;
-        std::cout << "[INFO]: Generic Prefix " << genericPrefix.toUri() << std::endl;
+        //std::cout << "[INFO]: Name.toUri " << name.toUri() << std::endl;
+        //std::cout << "[INFO]: Generic Prefix " << genericPrefix.toUri() << std::endl;
         std::string latest = execCmd("python3 get-latest.py -n " + genericPrefix.toUri());
-        std::cout << "[INFO]: " << latest << std::endl;
+        //std::cout << "[INFO]: " << latest << std::endl;
         
         std::string currentName = name.toUri();
         currentName.erase(std::remove_if(currentName.begin(), currentName.end(), ::isspace), currentName.end());
 
-        if (latest == currentName) {
-          std::cout << "[Skip] Already have latest version: " << name << std::endl;
+        //if (latest == currentName) {
+        //  std::cout << "[Skip] Already have latest version: " << name << std::endl;
+        //  continue;
+        //}
+
+        uint64_t curTs = extractTimestamp(currentName);
+        uint64_t latestTs = extractTimestamp(latest);
+
+        if (!latest.empty() && latestTs >= curTs) {
+          std::cout << "[Skip] Already have latest version: " << latest << std::endl;  
           continue;
         }
-        else{
-          std::cout << "[INFO] Strings do not match! " << std::endl;
+        // else{
+        //   std::cout << "[INFO] Strings do not match! " << std::endl;
 
-          std::cout << "[DEBUG] latest.size()=" << latest.size()
-          << ", currentName.size()=" << currentName.size() << std::endl;
+        //   std::cout << "[DEBUG] latest.size()=" << latest.size()
+        //   << ", currentName.size()=" << currentName.size() << std::endl;
 
-          for (size_t i = 0; i < std::min(latest.size(), currentName.size()); ++i) {
-              std::cout << "[" << i << "] " << int(latest[i]) << " vs " << int(currentName[i]) << std::endl;
-          }
-        }
+        //   for (size_t i = 0; i < std::min(latest.size(), currentName.size()); ++i) {
+        //       std::cout << "[" << i << "] " << int(latest[i]) << " vs " << int(currentName[i]) << std::endl;
+        //   }
+        // }
 
           // Step 1: erase from CS asynchronously
-        std::thread([name] {
-          std::string cmd = "nfdc cs erase " + name.toUri();
+        // std::thread([name] {
+        //   std::string cmd = "nfdc cs erase " + name.toUri();
+        //   int result = std::system(cmd.c_str());
+        //   if (result != 0) {
+        //     NDN_LOG_WARN("CS erase failed for " << name);
+        //   }
+        // }).detach();
+
+        if (!latest.empty()) {
+          std::thread([latest] {
+            deleteFromRepo(latest);
+          }).detach();
+        }
+
+        // Step 1: erase from CS asynchronously using generic prefix
+        std::thread([pref = genericPrefix.toUri()] {
+          std::string cmd = "nfdc cs erase " + pref;
           int result = std::system(cmd.c_str());
           if (result != 0) {
-            NDN_LOG_WARN("CS erase failed for " << name);
+            NDN_LOG_WARN("CS erase failed for " << pref);
           }
         }).detach();
-
+        
         // Step 2: schedule fetch and repo insert without blocking main loop
         m_scheduler.schedule(ndn::time::milliseconds(500), [this, name] {
           std::thread([this, name] {
