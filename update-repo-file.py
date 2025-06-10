@@ -115,7 +115,7 @@ def wait_until_repo_ready(name: str, timestamp: int, interval=0.1):
 
 
 def notify_update(name: str):
-    subprocess.run([PSYNC_UPDATE, PSYNC_REPO_NAME, name], check=False)
+    subprocess.run([PSYNC_UPDATE, PSYNC_REPO_NAME, name], check=True)
 
 
 def start_fetch_listener():

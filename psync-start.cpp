@@ -164,7 +164,7 @@ private:
 
         if (latest == currentName) {
           std::cout << "[Skip] Already have latest version: " << name << std::endl;
-          return;
+          continue;
         }
         else{
           std::cout << "[INFO] Strings do not match! " << std::endl;
