@@ -27,6 +27,7 @@ import socket
 import threading
 import atexit
 
+from termcolor import colored
 from repo_utils import getLatestVersion
 
 # Thread synchronization primitives for shared structures
@@ -108,7 +109,7 @@ def wait_until_repo_ready(name: str, timestamp: int, interval=0.1):
     while True:
         latest = getLatestVersion(name)
         if latest and latest.endswith(f"t={timestamp}"):
-            print(f"[Ready] Repo insert confirmed: {versioned_name}")
+            print(colored(f"[Ready] Repo insert confirmed: {versioned_name}", 'yellow'))
             return
         time.sleep(interval)
 
@@ -191,7 +192,7 @@ def debounce_trigger(file_path: Path):
         return
     
     if file_path in FETCHED_FROM_PSYC:
-        print(f"[Skip] File was fetched via PSync: {file_path}")
+        print(colored(f"[Skip] File was fetched via PSync: {file_path}", 'yellow'))
         FETCHED_FROM_PSYC.discard(file_path) # this is needed as for some reason after unlock is given, there is one more file event triggered!!!
         return
 
@@ -205,7 +206,7 @@ def process_file_change(file_path: Path):
     name = "/" + str(file_path.relative_to(WATCH_DIR)).replace("\\", "/") 
 
     try:
-        print(f"[Update Detected] {file_path} -> {name}")
+        print(colored(f"[Update Detected] {file_path} -> {name}", 'light_red'))
         
         latest_name = getLatestVersion(name)
         with DB_LOCK:
@@ -223,7 +224,8 @@ def process_file_change(file_path: Path):
         versioned_name = name + f"/t={ts}"
         with NOTIFY_UPDATE_LOCK:
             notify_update(versioned_name)
-
+            
+            
     except Exception as e:
         print(f"[Error] Failed to update {name}: {e}")
 

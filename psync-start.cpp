@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <PSync/detail/state.hpp>
 #include <map>
+#include "termcolor/termcolor.hpp"
 
 // for execCmd()
 #include <cstdio>
@@ -147,7 +148,7 @@ private:
         ndn::Name name = update.prefix;
         //name.appendSegment(i-1);
 
-        std::cout << "Update received: " << name << std::endl;
+        std::cout << termcolor::on_white << termcolor::blue << "Update received: " << name << termcolor::reset << std::endl;
         
         bool hostnameMatch = true;
         if (!m_hostname.empty()) {
@@ -166,7 +167,7 @@ private:
         }
 
         if (!hostnameMatch && !subsMatch) {
-          std::cout << "Ignoring update for " << name << " on host " << m_hostname << std::endl;
+          std::cout << termcolor::yellow << "Ignoring update for " << name << " on host " << m_hostname << termcolor::reset << std::endl;
           std::cout << "PSync update received but ignored due to hostname and subscription mismatch: " << name << std::endl;
           continue;
         }
@@ -180,45 +181,18 @@ private:
           }
         }
 
-        //std::cout << "[INFO]: Name.toUri " << name.toUri() << std::endl;
-        //std::cout << "[INFO]: Generic Prefix " << genericPrefix.toUri() << std::endl;
         std::string latest = execCmd("python3 get-latest.py -n " + genericPrefix.toUri());
-        //std::cout << "[INFO]: " << latest << std::endl;
         
         std::string currentName = name.toUri();
         currentName.erase(std::remove_if(currentName.begin(), currentName.end(), ::isspace), currentName.end());
-
-        //if (latest == currentName) {
-        //  std::cout << "[Skip] Already have latest version: " << name << std::endl;
-        //  continue;
-        //}
 
         uint64_t curTs = extractTimestamp(currentName);
         uint64_t latestTs = extractTimestamp(latest);
 
         if (!latest.empty() && latestTs >= curTs) {
-          std::cout << "[Skip] Already have latest version: " << latest << std::endl;  
+          std::cout << termcolor::yellow << "[Skip] Already have latest version: " << latest << termcolor::reset << std::endl;  
           continue;
         }
-        // else{
-        //   std::cout << "[INFO] Strings do not match! " << std::endl;
-
-        //   std::cout << "[DEBUG] latest.size()=" << latest.size()
-        //   << ", currentName.size()=" << currentName.size() << std::endl;
-
-        //   for (size_t i = 0; i < std::min(latest.size(), currentName.size()); ++i) {
-        //       std::cout << "[" << i << "] " << int(latest[i]) << " vs " << int(currentName[i]) << std::endl;
-        //   }
-        // }
-
-          // Step 1: erase from CS asynchronously
-        // std::thread([name] {
-        //   std::string cmd = "nfdc cs erase " + name.toUri();
-        //   int result = std::system(cmd.c_str());
-        //   if (result != 0) {
-        //     NDN_LOG_WARN("CS erase failed for " << name);
-        //   }
-        // }).detach();
 
         if (!latest.empty()) {
           std::thread([latest] {
@@ -252,7 +226,7 @@ private:
         curState.addContent(ndn::Name(prefix).appendNumber(seq));
       }
     }
-    std::cout << "[SyncState] " << curState << std::endl;
+    std::cout << termcolor::on_white << termcolor::blue <<"[SyncState] " << curState << termcolor::reset << std::endl;
   }
   
   bool fetchFile(const ndn::Name& name)

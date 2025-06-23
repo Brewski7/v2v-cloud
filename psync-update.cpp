@@ -15,6 +15,7 @@
 #include <ndn-cxx/util/scheduler.hpp>
 #include <iostream>
 #include <boost/asio/io_context.hpp>
+#include "termcolor/termcolor.hpp"
 
 NDN_LOG_INIT(PSync.Update);
 using namespace ndn::time_literals;
@@ -56,6 +57,7 @@ private:
     for (const auto& update : updates) {
       for (uint64_t i = update.lowSeq; i <= update.highSeq; ++i) {
         NDN_LOG_INFO("SyncUpdate: " << update.prefix << "/" << i);
+        std::cout << termcolor::on_yellow << termcolor::red << "Sync update received by Update::Face: " << update.prefix <<  termcolor::reset << std::endl;
       }
     }
 
@@ -69,11 +71,12 @@ private:
     NDN_LOG_INFO("Publish: " << prefix << "/" << seqNo);
     
      // Always print to console
-    std::cout << "Sync update published: " << prefix << "/" << seqNo << std::endl;
+    std::cout << termcolor::on_bright_white << termcolor::blue << "Sync update published: " << prefix << "/" << seqNo << termcolor::reset << std::endl;
     
     //m_face.shutdown(); // Ends processEvents() loop in main()
     m_scheduler.schedule(ndn::time::seconds(1), [this] {
       m_face.getIoContext().stop();
+      //m_face.shutdown();
     });
 
 
