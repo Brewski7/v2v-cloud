@@ -1,6 +1,6 @@
 CXX = g++
 PKG_CONFIG = pkg-config
-CXXFLAGS = $(shell $(PKG_CONFIG) --cflags libndn-cxx PSync)
+CXXFLAGS = -Iinclude $(shell $(PKG_CONFIG) --cflags libndn-cxx PSync)
 LDFLAGS = $(shell $(PKG_CONFIG) --libs libndn-cxx PSync)
 
 TARGETS = psync-start psync-update

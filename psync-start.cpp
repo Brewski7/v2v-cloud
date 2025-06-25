@@ -15,7 +15,7 @@
 #include <unistd.h>
 #include <PSync/detail/state.hpp>
 #include <map>
-#include "termcolor/termcolor.hpp"
+#include "termcolor.hpp"
 
 // for execCmd()
 #include <cstdio>

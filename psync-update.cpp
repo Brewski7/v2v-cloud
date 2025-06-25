@@ -15,7 +15,7 @@
 #include <ndn-cxx/util/scheduler.hpp>
 #include <iostream>
 #include <boost/asio/io_context.hpp>
-#include "termcolor/termcolor.hpp"
+#include "termcolor.hpp"
 
 NDN_LOG_INIT(PSync.Update);
 using namespace ndn::time_literals;
