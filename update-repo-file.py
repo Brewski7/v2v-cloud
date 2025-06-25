@@ -79,7 +79,14 @@ PSYNC_REPO_NAME = "psync"
 
 
 def erase_cs(name: str):
-    subprocess.run(["nfdc", "cs", "erase", name], check=False) # TODO: Needs to delete the version number or all associated with prefix
+    subprocess.run([
+        "nfdc", 
+        "cs", 
+        "erase", 
+        name
+        ], check=False, 
+        stdout=subprocess.DEVNULL, 
+        stderr=subprocess.DEVNULL) # TODO: Needs to delete the version number or all associated with prefix
 
 
 def delete_from_repo(name: str):
@@ -88,7 +95,9 @@ def delete_from_repo(name: str):
         "python3", DELFILE, 
         "-r", REPO_NAME,
         "-n", name
-    ], check=True)
+    ], check=True, 
+    stdout=subprocess.DEVNULL, 
+    stderr=subprocess.DEVNULL)
 
 
 def insert_to_repo(filepath: Path, name: str, timestamp: int):
@@ -98,7 +107,9 @@ def insert_to_repo(filepath: Path, name: str, timestamp: int):
         "-f", str(filepath),
         "-n", name,
         "--timestamp", str(timestamp)
-    ], check=True)
+    ], check=True, 
+    stdout=subprocess.DEVNULL, 
+    stderr=subprocess.DEVNULL)
 
 def wait_until_repo_ready(name: str, timestamp: int, interval=0.1):
     """
@@ -117,7 +128,7 @@ def wait_until_repo_ready(name: str, timestamp: int, interval=0.1):
 
 
 def notify_update(name: str):
-    subprocess.run([PSYNC_UPDATE, PSYNC_REPO_NAME, name], check=True)
+    subprocess.run([PSYNC_UPDATE, PSYNC_REPO_NAME, name], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 def start_fetch_listener():

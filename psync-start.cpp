@@ -127,7 +127,7 @@ private:
 
   static void deleteFromRepo(const std::string& name)
   {
-    std::string cmd = "python3 " + DELFILE + " -r bmw -n " + name;
+    std::string cmd = "python3 " + DELFILE + " -r bmw -n " + name + " > /dev/null 2>&1";
     int ret = std::system(cmd.c_str());
     if (ret != 0) {
       std::cerr << "[Delete Error] delfile.py failed for " << name << std::endl;
@@ -205,7 +205,7 @@ private:
 
         // Step 1: erase from CS asynchronously using generic prefix
         std::thread([pref = genericPrefix.toUri()] {
-          std::string cmd = "nfdc cs erase " + pref;
+          std::string cmd = "nfdc cs erase " + pref + " > /dev/null 2>&1";
           int result = std::system(cmd.c_str());
           if (result != 0) {
             NDN_LOG_WARN("CS erase failed for " << pref);
@@ -243,7 +243,7 @@ private:
   
   bool fetchFile(const ndn::Name& name)
   {
-    std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri();
+    std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri() + " > /dev/null 2>&1";
     int ret = std::system(cmd.c_str());
 
     if (ret == 0) {
@@ -262,7 +262,8 @@ private:
                       " -r bmw" +
                       " -f " + filepath +
                       " -n " + namePrefix +
-                      " --timestamp " + std::to_string(timestamp);
+                      " --timestamp " + std::to_string(timestamp) +
+                      " > /dev/null 2>&1";
 
     std::cout << "[PutFile] Running: " << cmd << std::endl;
     int ret = std::system(cmd.c_str());
