@@ -51,18 +51,18 @@ public:
   }
 
 private:
-  void processSyncUpdate(const std::vector<psync::MissingDataInfo>& updates)
-  {
+  // void processSyncUpdate(const std::vector<psync::MissingDataInfo>& updates)
+  // {
 
-    for (const auto& update : updates) {
-      for (uint64_t i = update.lowSeq; i <= update.highSeq; ++i) {
-        NDN_LOG_INFO("SyncUpdate: " << update.prefix << "/" << i);
-        std::cout << termcolor::on_bright_yellow << termcolor::red << "Sync update received by Update::Face: " << update.prefix <<  termcolor::reset << std::endl;
-        //std::cout << "Sync update received by Update::Face: " << update.prefix << std::endl;
-      }
-    }
+  //   for (const auto& update : updates) {
+  //     for (uint64_t i = update.lowSeq; i <= update.highSeq; ++i) {
+  //       NDN_LOG_INFO("SyncUpdate: " << update.prefix << "/" << i);
+  //       std::cout << termcolor::on_bright_yellow << termcolor::red << "Sync update received by Update::Face: " << update.prefix <<  termcolor::reset << std::endl;
+  //       //std::cout << "Sync update received by Update::Face: " << update.prefix << std::endl;
+  //     }
+  //   }
 
-  }
+  // }
 
   void doUpdate(const ndn::Name& prefix)
   {
@@ -72,13 +72,11 @@ private:
     NDN_LOG_INFO("Publish: " << prefix << "/" << seqNo);
     
      // Always print to console
-    std::cout << termcolor::on_bright_white << termcolor::blue << "Sync update published: " << prefix << "/" << seqNo << termcolor::reset << std::endl;
-    //std::cout << "Sync update published: " << prefix << "/" << seqNo << std::endl;
+    std::cout << termcolor::on_white << termcolor::blue << "Sync update published: " << prefix << "/" << seqNo << termcolor::reset << std::endl;
 
-    //m_face.shutdown(); // Ends processEvents() loop in main()
     m_scheduler.schedule(ndn::time::seconds(1), [this] {
       m_face.getIoContext().stop();
-      //m_face.shutdown();
+      //m_face.shutdown(); //does not behave as expected
     });
 
 

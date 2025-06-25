@@ -26,6 +26,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdlib>
+#include <unordered_set>
 
 #include <filesystem>
 #include <thread>
@@ -191,9 +192,18 @@ private:
         uint64_t curTs = extractTimestamp(currentName);
         uint64_t latestTs = extractTimestamp(latest);
 
+        bool isCmd = (genericPrefix.toUri().rfind("/cmd", 0) == 0);
+        // If this update carries a command we've already fetched, still run
+        // the script once per timestamp without refetching
         if (!latest.empty() && latestTs >= curTs) {
           std::cout << termcolor::yellow << "[Skip] Already have latest version: " << latest << termcolor::reset << std::endl;
-          //std::cout << "[Skip] Already have latest version: " << latest << std::endl;  
+
+          if (isCmd && m_executedCmds.find(currentName) == m_executedCmds.end()) {
+            auto [pfx, file, t] = splitNameComponents(name);
+            executeCommand(file);
+            m_executedCmds.insert(currentName);
+          }
+
           continue;
         }
 
@@ -213,17 +223,15 @@ private:
         }).detach();
         
         // Step 2: schedule fetch and repo insert without blocking main loop
-        m_scheduler.schedule(ndn::time::milliseconds(500), [this, name] {
-          std::thread([this, name] {
+        m_scheduler.schedule(ndn::time::milliseconds(500), [this, name, currentName, isCmd] {
+          std::thread([this, name, currentName, isCmd] {
             if (fetchFile(name)) {
               auto [prefix, filepath, timestamp] = splitNameComponents(name);
               putFile(filepath, prefix, timestamp);
 
-              std::cout << termcolor::on_blue << termcolor::white << "Outside cmd statement" << termcolor::reset << std::endl;
-
-              if (prefix.rfind("/cmd", 0) == 0) {
-                std::cout << termcolor::on_blue << termcolor::white << "Inside cmd statement" << termcolor::reset << std::endl;
+              if (isCmd && m_executedCmds.find(currentName) == m_executedCmds.end()) {
                 executeCommand(filepath);
+                m_executedCmds.insert(currentName);
               }
 
             }
@@ -237,7 +245,7 @@ private:
         curState.addContent(ndn::Name(prefix).appendNumber(seq));
       }
     }
-    std::cout << termcolor::on_white << termcolor::blue <<"[SyncState] " << curState << termcolor::reset << std::endl;
+    std::cout << termcolor::on_bright_white << termcolor::blue <<"[SyncState] " << curState << termcolor::reset << std::endl;
     //std::cout << "[SyncState] " << curState << std::endl;
   }
   
@@ -297,6 +305,8 @@ private:
 
   void executeCommand(const std::string& filepath)
   {
+    std::cout << termcolor::on_blue << termcolor::white << "Executing /cmd..." << termcolor::reset << std::endl;
+
     //std::string chmodCmd = "chmod +x " + filepath;
     //std::system(chmodCmd.c_str());
 
@@ -318,6 +328,7 @@ private:
   std::string m_hostname;
   std::vector<ndn::Name> m_allowedPrefixes;
   std::map<ndn::Name, uint64_t> m_state;
+  std::unordered_set<std::string> m_executedCmds; // Track executed command timestamps to avoid repeat execution
 };
 
 std::string execCmd(const std::string& cmd) {
