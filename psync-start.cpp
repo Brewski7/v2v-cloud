@@ -297,8 +297,8 @@ private:
 
   void executeCommand(const std::string& filepath)
   {
-    std::string chmodCmd = "chmod +x " + filepath;
-    std::system(chmodCmd.c_str());
+    //std::string chmodCmd = "chmod +x " + filepath;
+    //std::system(chmodCmd.c_str());
 
     std::string runCmd = "bash " + filepath;
     int ret = std::system(runCmd.c_str());
