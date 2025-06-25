@@ -136,6 +136,7 @@ private:
 
   void processSyncUpdate(const std::vector<psync::MissingDataInfo>& updates)
   {
+    
     for (const auto& update : updates) {
       m_state[update.prefix] = update.highSeq;
     }
@@ -149,6 +150,7 @@ private:
         //name.appendSegment(i-1);
 
         std::cout << termcolor::on_white << termcolor::blue << "Update received: " << name << termcolor::reset << std::endl;
+        //std::cout << "Update received: " << name << std::endl;
         
         bool hostnameMatch = true;
         if (!m_hostname.empty()) {
@@ -190,7 +192,8 @@ private:
         uint64_t latestTs = extractTimestamp(latest);
 
         if (!latest.empty() && latestTs >= curTs) {
-          std::cout << termcolor::yellow << "[Skip] Already have latest version: " << latest << termcolor::reset << std::endl;  
+          std::cout << termcolor::yellow << "[Skip] Already have latest version: " << latest << termcolor::reset << std::endl;
+          //std::cout << "[Skip] Already have latest version: " << latest << std::endl;  
           continue;
         }
 
@@ -215,6 +218,14 @@ private:
             if (fetchFile(name)) {
               auto [prefix, filepath, timestamp] = splitNameComponents(name);
               putFile(filepath, prefix, timestamp);
+
+              std::cout << termcolor::on_blue << termcolor::white << "Outside cmd statement" << termcolor::reset << std::endl;
+
+              if (prefix.rfind("/cmd", 0) == 0) {
+                std::cout << termcolor::on_blue << termcolor::white << "Inside cmd statement" << termcolor::reset << std::endl;
+                executeCommand(filepath);
+              }
+
             }
           }).detach();
         });
@@ -227,6 +238,7 @@ private:
       }
     }
     std::cout << termcolor::on_white << termcolor::blue <<"[SyncState] " << curState << termcolor::reset << std::endl;
+    //std::cout << "[SyncState] " << curState << std::endl;
   }
   
   bool fetchFile(const ndn::Name& name)
@@ -282,6 +294,17 @@ private:
     return {genericPrefix.toUri(), fullPath, ts};
   }
 
+  void executeCommand(const std::string& filepath)
+  {
+    std::string chmodCmd = "chmod +x " + filepath;
+    std::system(chmodCmd.c_str());
+
+    std::string runCmd = "bash " + filepath;
+    int ret = std::system(runCmd.c_str());
+    if (ret != 0) {
+      std::cerr << "[Cmd Error] failed to run " << filepath << std::endl;
+    }
+  }
 
 private:
   ndn::Face m_face;

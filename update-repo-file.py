@@ -110,6 +110,7 @@ def wait_until_repo_ready(name: str, timestamp: int, interval=0.1):
         latest = getLatestVersion(name)
         if latest and latest.endswith(f"t={timestamp}"):
             print(colored(f"[Ready] Repo insert confirmed: {versioned_name}", 'yellow'))
+            #print(f"[Ready] Repo insert confirmed: {versioned_name}")
             return
         time.sleep(interval)
 
@@ -193,6 +194,7 @@ def debounce_trigger(file_path: Path):
     
     if file_path in FETCHED_FROM_PSYC:
         print(colored(f"[Skip] File was fetched via PSync: {file_path}", 'yellow'))
+        #print(f"[Skip] File was fetched via PSync: {file_path}")
         FETCHED_FROM_PSYC.discard(file_path) # this is needed as for some reason after unlock is given, there is one more file event triggered!!!
         return
 
@@ -207,7 +209,8 @@ def process_file_change(file_path: Path):
 
     try:
         print(colored(f"[Update Detected] {file_path} -> {name}", 'light_red'))
-        
+        #print(f"[Update Detected] {file_path} -> {name}")
+
         latest_name = getLatestVersion(name)
         with DB_LOCK:
             if latest_name: delete_from_repo(latest_name) 

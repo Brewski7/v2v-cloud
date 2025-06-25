@@ -26,7 +26,7 @@ public:
   Producer(const ndn::Name& syncPrefix, const std::string& userPrefix)
     : m_producer(m_face, m_keyChain, syncPrefix, [this] {
         psync::FullProducer::Options opts;
-        opts.onUpdate = std::bind(&Producer::processSyncUpdate, this, _1);
+        //opts.onUpdate = std::bind(&Producer::processSyncUpdate, this, _1);
         opts.syncInterestLifetime = 1600_ms;
         opts.syncDataFreshness = 1600_ms;
         return opts;
@@ -57,7 +57,8 @@ private:
     for (const auto& update : updates) {
       for (uint64_t i = update.lowSeq; i <= update.highSeq; ++i) {
         NDN_LOG_INFO("SyncUpdate: " << update.prefix << "/" << i);
-        std::cout << termcolor::on_yellow << termcolor::red << "Sync update received by Update::Face: " << update.prefix <<  termcolor::reset << std::endl;
+        std::cout << termcolor::on_bright_yellow << termcolor::red << "Sync update received by Update::Face: " << update.prefix <<  termcolor::reset << std::endl;
+        //std::cout << "Sync update received by Update::Face: " << update.prefix << std::endl;
       }
     }
 
@@ -72,7 +73,8 @@ private:
     
      // Always print to console
     std::cout << termcolor::on_bright_white << termcolor::blue << "Sync update published: " << prefix << "/" << seqNo << termcolor::reset << std::endl;
-    
+    //std::cout << "Sync update published: " << prefix << "/" << seqNo << std::endl;
+
     //m_face.shutdown(); // Ends processEvents() loop in main()
     m_scheduler.schedule(ndn::time::seconds(1), [this] {
       m_face.getIoContext().stop();
