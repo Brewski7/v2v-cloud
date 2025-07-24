@@ -171,7 +171,7 @@ private:
 
         if (!hostnameMatch && !subsMatch) {
           std::cout << termcolor::yellow << "Ignoring update for " << name << " on host " << m_hostname << termcolor::reset << std::endl;
-          std::cout << "PSync update received but ignored due to hostname and subscription mismatch: " << name << std::endl;
+          // std::cout << "PSync update received but ignored due to hostname and subscription mismatch: " << name << std::endl;
           continue;
         }
 
@@ -192,7 +192,30 @@ private:
         uint64_t curTs = extractTimestamp(currentName);
         uint64_t latestTs = extractTimestamp(latest);
 
-        bool isCmd = (genericPrefix.toUri().rfind("/cmd", 0) == 0);
+        //bool isCmd = (genericPrefix.toUri().rfind("/cmd", 0) == 0);
+        bool isCmd = false;
+        std::string targetHost;
+
+        // Recognize generic commands: /cmd/<script>
+        // or host specific commands: /cmd/<host>/<script> or /<host>/cmd/<script>
+        if (name.size() > 0 && name.at(0).toUri() == "cmd") {
+          isCmd = true;
+          if (genericPrefix.size() > 2) {
+            targetHost = name.at(1).toUri();
+          }
+        }
+        else if (name.size() > 1 && name.at(1).toUri() == "cmd") {
+          isCmd = true;
+          if (genericPrefix.size() > 2) {
+            targetHost = name.at(0).toUri();
+          }
+        }
+
+        if (isCmd && !targetHost.empty() && !m_hostname.empty() && targetHost != m_hostname) {
+          std::cout << termcolor::yellow << "Ignoring host-specific command for "
+                    << targetHost << termcolor::reset << std::endl;
+          continue;
+        }
         // If this update carries a command we've already fetched, still run
         // the script once per timestamp without refetching
         if (!latest.empty() && latestTs >= curTs) {
@@ -245,7 +268,7 @@ private:
         curState.addContent(ndn::Name(prefix).appendNumber(seq));
       }
     }
-    std::cout << termcolor::on_bright_white << termcolor::blue << "--- [SyncState] ---\n" << curState << "\n-------------------" << termcolor::reset << std::endl;
+    std::cout << termcolor::on_bright_white << termcolor::blue << "--- [SyncState] ---\n" << curState << "\n-------------------\n" << termcolor::reset << std::endl;
     //std::cout << "[SyncState] " << curState << std::endl;
   }
   

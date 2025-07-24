@@ -209,7 +209,7 @@ def debounce_trigger(file_path: Path):
         FETCHED_FROM_PSYC.discard(file_path) # this is needed as for some reason after unlock is given, there is one more file event triggered!!!
         return
 
-    print(f"[Handle] File stabilized after debounce: {file_path}")
+    #print(f"[Handle] File stabilized after debounce: {file_path}")
     process_file_change(file_path)
 
 
