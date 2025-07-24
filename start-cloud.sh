@@ -1,4 +1,4 @@
-##!/bin/bash
+#!/bin/bash
 
 kill %1 %2 %3 %4 %4
 kill -SIGINT $$
