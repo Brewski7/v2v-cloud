@@ -23,5 +23,5 @@ python3 update-repo-file.py &
 sleep 5
 
 echo "[INFO] Starting psync-start..."
-./psync-start psync &
+./psync-start psync / &
 echo "[INFO] All processes started successfully."
