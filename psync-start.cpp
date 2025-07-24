@@ -245,7 +245,7 @@ private:
         curState.addContent(ndn::Name(prefix).appendNumber(seq));
       }
     }
-    std::cout << termcolor::on_bright_white << termcolor::blue <<"[SyncState] " << curState << termcolor::reset << std::endl;
+    std::cout << termcolor::on_bright_white << termcolor::blue << "--- [SyncState] ---\n" << curState << "-------------------" << termcolor::reset << std::endl;
     //std::cout << "[SyncState] " << curState << std::endl;
   }
   
@@ -273,7 +273,7 @@ private:
                       " --timestamp " + std::to_string(timestamp) +
                       " > /dev/null 2>&1";
 
-    std::cout << "[PutFile] Running: " << cmd << std::endl;
+    // std::cout << "[PutFile] Running: " << cmd << std::endl;
     int ret = std::system(cmd.c_str());
 
     if (ret != 0) {

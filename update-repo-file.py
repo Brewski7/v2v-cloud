@@ -147,13 +147,13 @@ def start_fetch_listener():
                     path = Path(msg[5:]).resolve()
                     #with LOCK:
                     FETCHED_LOCKS.add(path)
-                    print(f"[Socket] LOCKED: {path}")
+                    #print(f"[Socket] LOCKED: {path}")
                 elif msg.startswith("UNLOCK:"):
                     path = Path(msg[7:]).resolve()
                     #with LOCK:
                     FETCHED_LOCKS.discard(path)
                     FETCHED_FROM_PSYC.add(path)
-                    print(f"[Socket] UNLOCKED: {path}")
+                    #print(f"[Socket] UNLOCKED: {path}")
             except Exception as e:
                 print(f"[Socket Error] {e}")
 
@@ -200,11 +200,11 @@ def debounce_trigger(file_path: Path):
     DEBOUNCE_TIMERS.pop(file_path, None)
 
     if file_path in FETCHED_LOCKS:
-        print(f"[Skip] Locked file after debounce: {file_path}")
+        #print(f"[Skip] Locked file after debounce: {file_path}")
         return
     
     if file_path in FETCHED_FROM_PSYC:
-        print(colored(f"[Skip] File was fetched via PSync: {file_path}", 'yellow'))
+        #print(colored(f"[Skip] File was fetched via PSync: {file_path}", 'yellow'))
         #print(f"[Skip] File was fetched via PSync: {file_path}")
         FETCHED_FROM_PSYC.discard(file_path) # this is needed as for some reason after unlock is given, there is one more file event triggered!!!
         return
