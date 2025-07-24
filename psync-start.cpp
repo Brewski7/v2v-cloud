@@ -268,7 +268,7 @@ private:
         curState.addContent(ndn::Name(prefix).appendNumber(seq));
       }
     }
-    std::cout << termcolor::on_bright_white << termcolor::blue << "--- [SyncState] ---\n" << curState << "\n-------------------\n" << termcolor::reset << std::endl;
+    std::cout << termcolor::blue << "\n--- [SyncState] ---\n" << curState << "\n-------------------\n" << termcolor::reset << std::endl;
     //std::cout << "[SyncState] " << curState << std::endl;
   }
   
@@ -328,7 +328,7 @@ private:
 
   void executeCommand(const std::string& filepath)
   {
-    std::cout << termcolor::on_blue << termcolor::white << "Executing /cmd..." << termcolor::reset << std::endl;
+    std::cout << termcolor::on_blue << termcolor::white << "Executing /cmd...\n" << termcolor::reset << std::endl;
 
     //std::string chmodCmd = "chmod +x " + filepath;
     //std::system(chmodCmd.c_str());
