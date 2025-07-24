@@ -19,9 +19,9 @@ ndn-python-repo > /dev/null 2>&1 &
 sleep 5
 
 echo "[INFO] Starting update-repo-file.py..."
-python3 update-repo-file.py > /dev/null 2>&1 &
+python3 update-repo-file.py &
 sleep 5
 
 echo "[INFO] Starting psync-start..."
-./psync-start psync > /dev/null 2>&1 &
+./psync-start psync &
 echo "[INFO] All processes started successfully."
