@@ -56,7 +56,7 @@ void initWatchDir()
     WATCH_DIR = PRIMARY_PATH / "bmw";   // running on RPi
   }
 
-  std::cout << "[Init] WATCH_DIR set to: " << WATCH_DIR << std::endl;
+  std::cout << "\n[Init] WATCH_DIR set to: " << WATCH_DIR << std::endl;
 }
 
 class SyncListener
@@ -245,7 +245,7 @@ private:
         curState.addContent(ndn::Name(prefix).appendNumber(seq));
       }
     }
-    std::cout << termcolor::on_bright_white << termcolor::blue << "--- [SyncState] ---\n" << curState << "-------------------" << termcolor::reset << std::endl;
+    std::cout << termcolor::on_bright_white << termcolor::blue << "--- [SyncState] ---\n" << curState << "\n-------------------" << termcolor::reset << std::endl;
     //std::cout << "[SyncState] " << curState << std::endl;
   }
   
@@ -255,7 +255,7 @@ private:
     int ret = std::system(cmd.c_str());
 
     if (ret == 0) {
-      std::cout << "Fetched file via getfile.py: " << name << std::endl;
+      //std::cout << "Fetched file via getfile.py: " << name << std::endl;
       return true;
     }
     else {

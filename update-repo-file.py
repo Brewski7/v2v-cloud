@@ -252,7 +252,7 @@ if __name__ == "__main__":
     start_fetch_listener()
     observer.start()
 
-    print(f"[Watching] Folder: {WATCH_DIR.resolve()}")
+    #print(f"[Watching] Folder: {WATCH_DIR.resolve()}")
     try:
         while True:
             time.sleep(1)
