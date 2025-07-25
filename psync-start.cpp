@@ -274,16 +274,15 @@ private:
   
   bool fetchFile(const ndn::Name& name)
   {
-    std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri(); // + " > /dev/null 2>&1";
+    std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri() + " > /dev/null 2>&1";
     int ret = std::system(cmd.c_str());
 
     if (ret == 0) {
-      std::cout << "Fetched file via getfile.py: " << name << std::endl;
+      //std::cout << "Fetched file via getfile.py: " << name << std::endl;
       return true;
     }
     else {
       NDN_LOG_WARN("getfile.py failed for " << name);
-      std::cout << "Fetched file FIALED " << name << std::endl;
       return false;
     }
   }
@@ -294,10 +293,10 @@ private:
                       " -r bmw" +
                       " -f " + filepath +
                       " -n " + namePrefix +
-                      " --timestamp " + std::to_string(timestamp); //+
-                      //" > /dev/null 2>&1";
+                      " --timestamp " + std::to_string(timestamp) +
+                      " > /dev/null 2>&1";
 
-    std::cout << "[PutFile] Running: " << cmd << std::endl;
+    // std::cout << "[PutFile] Running: " << cmd << std::endl;
     int ret = std::system(cmd.c_str());
 
     if (ret != 0) {
