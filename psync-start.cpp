@@ -293,10 +293,10 @@ private:
                       " -r bmw" +
                       " -f " + filepath +
                       " -n " + namePrefix +
-                      " --timestamp " + std::to_string(timestamp) +
-                      " > /dev/null 2>&1";
+                      " --timestamp " + std::to_string(timestamp); //+
+                      //" > /dev/null 2>&1";
 
-    // std::cout << "[PutFile] Running: " << cmd << std::endl;
+    std::cout << "[PutFile] Running: " << cmd << std::endl;
     int ret = std::system(cmd.c_str());
 
     if (ret != 0) {
