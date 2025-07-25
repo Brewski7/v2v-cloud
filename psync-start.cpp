@@ -274,7 +274,7 @@ private:
   
   bool fetchFile(const ndn::Name& name)
   {
-    std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri() + " > /dev/null 2>&1";
+    std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri(); // + " > /dev/null 2>&1";
     int ret = std::system(cmd.c_str());
 
     if (ret == 0) {
