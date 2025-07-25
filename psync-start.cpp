@@ -328,7 +328,7 @@ private:
 
   void executeCommand(const std::string& filepath)
   {
-    std::cout << termcolor::on_blue << termcolor::white << "Executing /cmd...\n" << termcolor::reset << std::endl;
+    std::cout << termcolor::on_blue << termcolor::white << "Executing /cmd..." << termcolor::reset << "\n" << std::endl;
 
     //std::string chmodCmd = "chmod +x " + filepath;
     //std::system(chmodCmd.c_str());
