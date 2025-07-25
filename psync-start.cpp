@@ -278,11 +278,12 @@ private:
     int ret = std::system(cmd.c_str());
 
     if (ret == 0) {
-      //std::cout << "Fetched file via getfile.py: " << name << std::endl;
+      std::cout << "Fetched file via getfile.py: " << name << std::endl;
       return true;
     }
     else {
       NDN_LOG_WARN("getfile.py failed for " << name);
+      std::cout << "Fetched file FIALED " << name << std::endl;
       return false;
     }
   }
