@@ -228,9 +228,7 @@ def debounce_trigger(file_path: Path):
 def process_file_change(file_path: Path):
     
     # use full relative path in name and not just the file name. This keeps subdirectories intact
-    name = "/" + str(file_path.relative_to(WATCH_DIR)).replace("\\", "/") 
-    versioned_name = name + f"/t={ts}"
-    logfile = sanitize_name(versioned_name)
+    name = "/" + str(file_path.relative_to(WATCH_DIR)).replace("\\", "/")
 
     try:
         print(colored(f"[Update Detected] {file_path} -> {name}", 'light_red'))
@@ -244,6 +242,8 @@ def process_file_change(file_path: Path):
         erase_cs(name)
 
         ts = int(time.time())
+        versioned_name = name + f"/t={ts}"
+        logfile = sanitize_name(versioned_name)
         with DB_LOCK:
             perf_log(logfile, "INSERT_START", name)
             insert_to_repo(file_path, name, ts)
