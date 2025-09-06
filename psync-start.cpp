@@ -46,6 +46,8 @@ NDN_LOG_INIT(PSync.Start);
 using namespace ndn::time_literals;
 
 namespace fs = std::filesystem;
+// Always place logs in ~/perf_logs
+const fs::path PERF_LOGS_DIR = fs::path(getenv("HOME")) / "perf_logs";
 
 std::string execCmd(const std::string& cmd);
 
@@ -54,16 +56,31 @@ fs::path FALLBACK_PATH = "/home/brewski/masters";
 fs::path WATCH_DIR;
 
 std::string sanitizeName(const std::string& name) {
-  std::string out = name;
-  for (auto& c : out) {
-    if (!(isalnum(c) || c == '.' || c == '-')) c = '-';
+  std::string out;
+  out.reserve(name.size());
+
+  // skip leading "/"
+  size_t i = 0;
+  if (!name.empty() && name[0] == '/')
+    i = 1;
+
+  for (; i < name.size(); ++i) {
+    char c = name[i];
+    if (std::isalnum(static_cast<unsigned char>(c)) || c == '.' || c == '-' || c == '_') {
+      out.push_back(c);
+    } else {
+      out.push_back('-');
+    }
   }
-  return out + ".log";
+
+  fs::create_directories(PERF_LOGS_DIR);
+
+  return (PERF_LOGS_DIR / (out + ".log")).string();
 }
 
 void perfLog(const std::string& filename, const std::string& event, const std::string& name) {
   if (!ENABLE_PERF_LOG) return;
-  auto now = std::chrono::steady_clock::now().time_since_epoch();
+  auto now = std::chrono::system_clock::now().time_since_epoch();
   auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
   std::ofstream f(filename, std::ios::app);
   f << "[" << ns << "] " << event << " " << name << std::endl;

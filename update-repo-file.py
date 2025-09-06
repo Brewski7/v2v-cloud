@@ -13,7 +13,7 @@
     @author Waldo Jordaan
 '''
 
-import time, re
+import time, re, os
 import subprocess
 from pathlib import Path
 from watchdog.observers import Observer
@@ -78,16 +78,25 @@ PSYNC_UPDATE = "./psync-update"
 PSYNC_REPO_NAME = "psync"
 
 ENABLE_PERF_LOG = True
+# Always place logs in ~/perf_logs
+PERF_LOGS_DIR = Path.home() / "perf_logs"
+PERF_LOGS_DIR.mkdir(exist_ok=True)
 
 def sanitize_name(name: str) -> str:
-    # turn /bmw/file1/t=12345 into bmw-file1-t=12345.log
-    return re.sub(r'[^a-zA-Z0-9_.-]', '-', name) + ".log"
+    # strip leading "/" so it doesn’t become "-"
+    if name.startswith("/"):
+        name = name[1:]
 
+    safe = re.sub(r'[^a-zA-Z0-9_.-]', '-', name)
+    return str(PERF_LOGS_DIR / (safe + ".log"))
 
 def perf_log(filename: str, event: str, name: str):
+    if not ENABLE_PERF_LOG:
+        return
     ts = time.time_ns()
     with open(filename, "a") as f:
         f.write(f"[{ts}] {event} {name}\n")
+
 
 
 def erase_cs(name: str):
