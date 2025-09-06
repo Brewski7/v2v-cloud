@@ -31,6 +31,11 @@
 #include <filesystem>
 #include <thread>
 
+// for perf_log
+#include <chrono>
+#include <cctype>
+const bool ENABLE_PERF_LOG = true;
+
 std::string GETFILE = "./getfile.py";
 std::string GETLATEST = "./get-latest.py";
 std::string PUTFILE = "./putfile.py";
@@ -47,6 +52,22 @@ std::string execCmd(const std::string& cmd);
 fs::path PRIMARY_PATH = "/home/brewski";
 fs::path FALLBACK_PATH = "/home/brewski/masters";
 fs::path WATCH_DIR;
+
+std::string sanitizeName(const std::string& name) {
+  std::string out = name;
+  for (auto& c : out) {
+    if (!(isalnum(c) || c == '.' || c == '-')) c = '-';
+  }
+  return out + ".log";
+}
+
+void perfLog(const std::string& filename, const std::string& event, const std::string& name) {
+  if (!ENABLE_PERF_LOG) return;
+  auto now = std::chrono::steady_clock::now().time_since_epoch();
+  auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(now).count();
+  std::ofstream f(filename, std::ios::app);
+  f << "[" << ns << "] " << event << " " << name << std::endl;
+}
 
 void initWatchDir()
 {
@@ -152,6 +173,9 @@ private:
 
         std::cout << termcolor::on_white << termcolor::blue << "Update received: " << name << termcolor::reset << std::endl;
         //std::cout << "Update received: " << name << std::endl;
+
+        std::string logfile = sanitizeName(name.toUri());
+        perfLog(logfile, "PSYNC_UPDATE", name.toUri());
         
         bool hostnameMatch = true;
         if (!m_hostname.empty()) {
@@ -274,11 +298,15 @@ private:
   
   bool fetchFile(const ndn::Name& name)
   {
+    std::string logfile = sanitizeName(name.toUri());
+    perfLog(logfile, "FETCH_START", name.toUri());
+
     std::string cmd = "python3 " + GETFILE + " -r bmw -n " + name.toUri() + " > /dev/null 2>&1";
     int ret = std::system(cmd.c_str());
 
     if (ret == 0) {
       //std::cout << "Fetched file via getfile.py: " << name << std::endl;
+      perfLog(logfile, "FETCH_DONE", name.toUri());
       return true;
     }
     else {

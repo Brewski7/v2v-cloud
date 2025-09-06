@@ -13,7 +13,7 @@
     @author Waldo Jordaan
 '''
 
-import time
+import time, re
 import subprocess
 from pathlib import Path
 from watchdog.observers import Observer
@@ -76,6 +76,18 @@ PUTFILE = "./putfile.py"
 DELFILE = "./delfile.py"
 PSYNC_UPDATE = "./psync-update"
 PSYNC_REPO_NAME = "psync"
+
+ENABLE_PERF_LOG = True
+
+def sanitize_name(name: str) -> str:
+    # turn /bmw/file1/t=12345 into bmw-file1-t=12345.log
+    return re.sub(r'[^a-zA-Z0-9_.-]', '-', name) + ".log"
+
+
+def perf_log(filename: str, event: str, name: str):
+    ts = time.time_ns()
+    with open(filename, "a") as f:
+        f.write(f"[{ts}] {event} {name}\n")
 
 
 def erase_cs(name: str):
@@ -217,6 +229,8 @@ def process_file_change(file_path: Path):
     
     # use full relative path in name and not just the file name. This keeps subdirectories intact
     name = "/" + str(file_path.relative_to(WATCH_DIR)).replace("\\", "/") 
+    versioned_name = name + f"/t={ts}"
+    logfile = sanitize_name(versioned_name)
 
     try:
         print(colored(f"[Update Detected] {file_path} -> {name}", 'light_red'))
@@ -224,19 +238,22 @@ def process_file_change(file_path: Path):
 
         latest_name = getLatestVersion(name)
         with DB_LOCK:
-            if latest_name: delete_from_repo(latest_name) 
+            if latest_name: delete_from_repo(latest_name)
             else: print("No version found") 
         
         erase_cs(name)
 
         ts = int(time.time())
         with DB_LOCK:
+            perf_log(logfile, "INSERT_START", name)
             insert_to_repo(file_path, name, ts)
         
         wait_until_repo_ready(name, ts)
+        perf_log(logfile, "INSERT_DONE", versioned_name)
         
-        versioned_name = name + f"/t={ts}"
+        #versioned_name = name + f"/t={ts}"
         with NOTIFY_UPDATE_LOCK:
+            perf_log(logfile, "NOTIFY_UPDATE", versioned_name)
             notify_update(versioned_name)
             
             
