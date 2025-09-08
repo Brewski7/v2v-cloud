@@ -347,9 +347,12 @@ private:
     if (ret != 0) {
       std::cerr << "[PutFile Error] putfile.py failed for " << filepath << std::endl;
     }else{ 
-      std::string name = filepath + std::to_string(timestamp);
-      std::string logfile = sanitizeName(name);
-      perfLog(logfile, "FETCHED_FILE_INSERTED", name);
+    // Construct the full NDN name with version
+    std::string versionedName = namePrefix + "/t=" + std::to_string(timestamp);
+
+    // Use NDN name for logfile, not filepath
+    std::string logfile = sanitizeName(versionedName);
+    perfLog(logfile, "FETCHED_FILE_INSERTED", versionedName);
     }
   }
 
