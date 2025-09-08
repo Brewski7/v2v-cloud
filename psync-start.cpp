@@ -346,6 +346,10 @@ private:
 
     if (ret != 0) {
       std::cerr << "[PutFile Error] putfile.py failed for " << filepath << std::endl;
+    }else{ 
+      std::string name = filepath + std::to_string(timestamp);
+      std::string logfile = sanitizeName(name);
+      perfLog(logfile, "FETCHED_FILE_INSERTED", name);
     }
   }
 
