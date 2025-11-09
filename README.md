@@ -8,8 +8,6 @@ edited inside the watched directory on the "cloud" node are inserted into the
 local repo, versioned, announced via PSync, and then fetched by remote
 consumers.
 
-![PSync state flow diagram](docs/Design_2.png)
-
 A short demo video of the system in action is available in the companion
 repository: [brewski/Vehicle-Cloud](https://github.com/Brewski7/Vehicle-Cloud).
 
@@ -25,6 +23,17 @@ repository: [brewski/Vehicle-Cloud](https://github.com/Brewski7/Vehicle-Cloud).
 | `repo_utils.py` | Shared helpers for querying the repo SQLite database. |
 | `start-cloud.sh` / `stop-cloud.sh` | Convenience scripts to launch and tear down the repo watcher, PSync binaries, and repo service. |
 | `subsfile` | Optional newline-separated list of prefixes that `psync-start` is allowed to fetch. |
+
+## System architecture overview
+
+The following diagram illustrates the internal PSync–Repo coordination flow,
+showing how file updates are detected, versioned, and propagated between nodes.
+
+<p align="center">
+  <a href="docs/Design_2.png">
+    <img src="docs/Design_2.png" alt="PSync state flow diagram" width="40%">
+  </a>
+</p>
 
 ## Prerequisites
 
