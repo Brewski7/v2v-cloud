@@ -1,0 +1,22 @@
+Copyright (c) 2025 Waldo Jordaan. All rights reserved.
+
+This repository is provided publicly for academic demonstration purposes only
+as part of the author’s Master's research conducted under a Non-Disclosure
+Agreement (NDA) with the sponsoring organization (BMW IT Hub South Africa).
+
+All intellectual property (IP) arising from this work, including system design,
+architecture, and implementation details, remains the property of the author
+and the sponsoring organization.
+
+No part of this repository may be copied, modified, reproduced, distributed,
+or used for commercial or research purposes without prior written permission
+from the author and sponsors.
+
+Third-party components used within this repository retain their original
+open-source licenses, including but not limited to:
+- ndn-python-repo (MIT License)
+- PSync (GPL-3.0 License)
+- libndn-cxx (GPL-3.0 License)
+
+For permission inquiries, please contact:
+waldojordaan14@gmail.com
