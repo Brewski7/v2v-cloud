@@ -14,9 +14,12 @@ from the author and sponsors.
 
 Third-party components used within this repository retain their original
 open-source licenses, including but not limited to:
-- ndn-python-repo (MIT License)
-- PSync (GPL-3.0 License)
-- libndn-cxx (GPL-3.0 License)
+- ndn-python-repo (Apache License 2.0)
+- python-ndn (Apache License 2.0)
+- PSync (LGPL-3.0 License)
+- libndn-cxx (LGPL-3.0 License)
+- watchdog (Apache License 2.0)
+- termcolor (MIT License)
 
 For permission inquiries, please contact:
 waldojordaan14@gmail.com
