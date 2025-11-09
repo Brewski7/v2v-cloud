@@ -144,3 +144,8 @@ propagation latency across the V2V network.
   fetched locally (synchronization happens over a UNIX domain socket).
 * Verify that the prefixes listed in `subsfile` match the prefixes inserted into
   the repo; otherwise the consumer will ignore the update.
+
+> <sub>© 2025 Waldo Jordaan. All rights reserved.  
+> Provided for academic demonstration under NDA with BMW IT Hub South Africa.  
+> Redistribution or modification prohibited.  
+> See the [LICENSE](./LICENSE) file for details.</sub>
